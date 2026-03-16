@@ -1,11 +1,53 @@
 #!/usr/bin/env bash
 # 项目文档生成工具安装脚本（全局可用 + gd 快捷命令）
+# 支持 --uninstall 卸载
 
 set -e
 
+# ============================================================
+#  卸载模式
+# ============================================================
+if [[ "$1" == "--uninstall" ]]; then
+    echo "🗑 卸载 gen-docs..."
+
+    FOUND=false
+    for DIR in "/usr/local/bin" "$HOME/.local/bin"; do
+        if [[ -f "$DIR/gen-docs" ]]; then
+            FOUND=true
+            if [[ -w "$DIR" ]]; then
+                rm -f "$DIR/gen-docs" "$DIR/gd"
+                echo "✓ 已从 $DIR 移除 gen-docs 和 gd"
+            elif command -v sudo &> /dev/null; then
+                sudo rm -f "$DIR/gen-docs" "$DIR/gd"
+                echo "✓ 已从 $DIR 移除 gen-docs 和 gd (sudo)"
+            else
+                echo "❌ 无权限删除 $DIR/gen-docs，请手动删除"
+                exit 1
+            fi
+        fi
+    done
+
+    if [[ "$FOUND" == false ]]; then
+        echo "⚠️  未找到已安装的 gen-docs"
+    else
+        echo "✅ 卸载完成"
+    fi
+    exit 0
+fi
+
+# ============================================================
+#  安装模式
+# ============================================================
 echo "🚀 开始安装 gen-docs..."
 
-# -------- 基础检查 --------
+# -------- 前置检查：源文件 --------
+if [[ ! -f "gen-docs.go" ]]; then
+    echo "❌ 未找到 gen-docs.go"
+    echo "请在包含 gen-docs.go 的目录中运行此脚本"
+    exit 1
+fi
+
+# -------- 前置检查：Go 编译器 --------
 if ! command -v go &> /dev/null; then
     echo "❌ 未检测到 Go 编译器"
     echo "请先安装 Go: https://go.dev/dl/"
@@ -33,6 +75,12 @@ fi
 
 echo "📍 安装目录: $INSTALL_DIR"
 
+# -------- 检查已有安装 --------
+if [[ -f "$INSTALL_DIR/gen-docs" ]]; then
+    EXISTING_VERSION=$("$INSTALL_DIR/gen-docs" -version 2>/dev/null || echo "unknown")
+    echo "⚠️  检测到已安装版本: $EXISTING_VERSION，将覆盖安装..."
+fi
+
 # -------- 安装主程序 --------
 echo "📥 安装 gen-docs"
 $USE_SUDO mv gen-docs "$INSTALL_DIR/gen-docs"
@@ -59,19 +107,29 @@ if [[ "$INSTALL_DIR" == "$HOME/.local/bin" ]]; then
     fi
 fi
 
+# -------- 验证安装 --------
+NEW_VERSION=$("$INSTALL_DIR/gen-docs" -version 2>/dev/null || echo "")
+
 # -------- 完成 --------
 echo ""
-echo "✅ 安装完成！"
+echo "✅ 安装完成！${NEW_VERSION:+ ($NEW_VERSION)}"
 echo ""
 echo "现在你可以在任意目录使用："
 echo "  gen-docs     # 完整命令"
 echo "  gd           # 快捷命令"
 echo ""
 echo "示例："
-echo "  gd"
-echo "  gd -i md,go                  # 只包含特定后缀"
-echo "  gd -x exe,bin                # 排除特定后缀"
-echo "  gd -m _test.go               # 模糊匹配：提取所有测试文件"
-echo "  gd -m _test.go -xm vendor/   # 复合匹配：包含测试但排除第三方库"
-echo "  gd -ns                       # 不扫描子目录"
+echo "  gd                                 # 扫描当前目录"
+echo "  gd -i md,go                        # 只包含特定后缀"
+echo "  gd -x exe,bin                      # 排除特定后缀"
+echo "  gd -m _test.go                     # 模糊匹配：提取所有测试文件"
+echo "  gd -m _test.go -xm vendor/         # 复合匹配：包含测试但排除第三方库"
+echo "  gd -ns                             # 不扫描子目录"
+echo "  gd --dry-run                       # 预览模式，不实际生成文件"
+echo "  gd --no-default-ignore             # 禁用默认忽略规则"
+echo "  gd --no-gitignore                  # 不加载 .gitignore"
+echo "  gd --ignore generated,proto        # 额外忽略特定目录/文件"
+echo ""
+echo "卸载："
+echo "  bash install-gen-docs.sh --uninstall"
 echo ""
