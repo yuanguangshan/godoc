@@ -1,5 +1,5 @@
 {
-  "name": "gdox",
+  "name": "@yuanguangshan/gdox",
   "version": "1.0.0",
   "description": "一键生成项目代码快照，为 AI 辅助开发与架构审计而生。",
   "main": "index.js",
@@ -7,14 +7,17 @@
     "gdox": "index.js"
   },
   "scripts": {
-    "build": "go build -o gdox gdox.go",
+    "build": "GOOS=darwin GOARCH=amd64 go build -o gdox-darwin-amd64 gdox.go && GOOS=darwin GOARCH=arm64 go build -o gdox-darwin-arm64 gdox.go && GOOS=linux GOARCH=amd64 go build -o gdox-linux-amd64 gdox.go && GOOS=linux GOARCH=arm64 go build -o gdox-linux-arm64 gdox.go && GOOS=windows GOARCH=amd64 go build -o gdox-win-amd64.exe gdox.go",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
     "index.js",
-    "gdox",
-    "gdox.exe",
+    "gdox-darwin-amd64",
+    "gdox-darwin-arm64",
+    "gdox-linux-amd64",
+    "gdox-linux-arm64",
+    "gdox-win-amd64.exe",
     "README.md"
   ],
   "repository": {

@@ -1,4 +1,4 @@
-gen-docs
-gen-docs.exe
+gdox
+gdox.exe
 node_modules
 *.log

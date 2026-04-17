@@ -5,12 +5,25 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
-const binaryName = os.platform() === 'win32' ? 'gdox.exe' : 'gdox';
+const platform = os.platform();
+const arch = os.arch();
+
+const archMap = { x64: 'amd64', arm64: 'arm64' };
+const mappedArch = archMap[arch];
+
+if (!mappedArch) {
+  console.error(`Unsupported architecture: ${arch}`);
+  process.exit(1);
+}
+
+const binaryName = platform === 'win32'
+  ? `gdox-win-${mappedArch}.exe`
+  : `gdox-${platform}-${mappedArch}`;
 const binaryPath = path.join(__dirname, binaryName);
 
 if (!fs.existsSync(binaryPath)) {
   console.error(`Error: Binary not found at ${binaryPath}`);
-  console.error('Please run "go build -o gdox gdox.go" first or check your installation.');
+  console.error(`Platform: ${platform}, Arch: ${arch}`);
   process.exit(1);
 }
 
