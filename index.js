@@ -24,7 +24,7 @@ const binaryPath = path.join(__dirname, binaryName);
 if (!fs.existsSync(binaryPath)) {
   console.error(`Error: Binary not found at ${binaryPath}`);
   console.error(`Platform: ${platform}, Arch: ${arch}`);
-  console.error(`Try running: npm rebuild codocs`);
+  console.error(`Try running: npm rebuild mdcode`);
   process.exit(1);
 }
 
