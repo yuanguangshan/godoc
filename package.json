@@ -1,6 +1,6 @@
 {
   "name": "sourcepack",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "一键生成项目代码快照，为 AI 辅助开发与架构审计而生。",
   "main": "index.js",
   "bin": {
