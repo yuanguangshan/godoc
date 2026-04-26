@@ -4,12 +4,11 @@
   "description": "一键生成项目代码快照，为 AI 辅助开发与架构审计而生。",
   "main": "index.js",
   "bin": {
-    "sourcepack": "index.js",
-    "godoc": "index.js"
+    "sourcepack": "index.js"
   },
   "scripts": {
     "postinstall": "node download-binary.js",
-    "build": "VERSION=$(node -p \"require('./package.json').version\") && LDFLAGS=\"-X main.versionStr=v${VERSION}\" && echo \"Building godoc v${VERSION} ...\" && GOOS=darwin GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o godoc-darwin-amd64 godoc.go && GOOS=darwin GOARCH=arm64 go build -ldflags \"$LDFLAGS\" -o godoc-darwin-arm64 godoc.go && GOOS=linux GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o godoc-linux-amd64 godoc.go && GOOS=linux GOARCH=arm64 go build -ldflags \"$LDFLAGS\" -o godoc-linux-arm64 godoc.go && GOOS=windows GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o godoc-win-amd64.exe godoc.go && echo \"Done.\"",
+    "build": "VERSION=$(node -p \"require('./package.json').version\") && LDFLAGS=\"-X main.versionStr=v${VERSION}\" && echo \"Building sourcepack v${VERSION} ...\" && GOOS=darwin GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o sourcepack-darwin-amd64 godoc.go && GOOS=darwin GOARCH=arm64 go build -ldflags \"$LDFLAGS\" -o sourcepack-darwin-arm64 godoc.go && GOOS=linux GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o sourcepack-linux-amd64 godoc.go && GOOS=linux GOARCH=arm64 go build -ldflags \"$LDFLAGS\" -o sourcepack-linux-arm64 godoc.go && GOOS=windows GOARCH=amd64 go build -ldflags \"$LDFLAGS\" -o sourcepack-win-amd64.exe godoc.go && echo \"Done.\"",
     "prepublishOnly": "npm run build",
     "test": "go test ./..."
   },
