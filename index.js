@@ -17,8 +17,8 @@ if (!mappedArch) {
 }
 
 const binaryName = platform === 'win32'
-  ? `godoc-win-${mappedArch}.exe`
-  : `godoc-${platform}-${mappedArch}`;
+  ? `sourcepack-win-${mappedArch}.exe`
+  : `sourcepack-${platform}-${mappedArch}`;
 const binaryPath = path.join(__dirname, binaryName);
 
 if (!fs.existsSync(binaryPath)) {

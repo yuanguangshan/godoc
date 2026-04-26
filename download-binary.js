@@ -22,10 +22,10 @@ if (!mappedArch) {
 }
 
 const ext = platform === 'win32' ? '.zip' : '.tar.gz';
-const archiveName = `godoc_${VERSION}_${platform}_${mappedArch}${ext}`;
+const archiveName = `sourcepack_${VERSION}_${platform}_${mappedArch}${ext}`;
 const downloadUrl = `https://github.com/${REPO}/releases/download/v${VERSION}/${archiveName}`;
 
-const binName = platform === 'win32' ? 'godoc.exe' : `godoc-${platform}-${mappedArch}`;
+const binName = platform === 'win32' ? 'sourcepack.exe' : `sourcepack-${platform}-${mappedArch}`;
 const binDir = __dirname;
 
 function download(url) {
@@ -44,7 +44,7 @@ function download(url) {
 }
 
 async function main() {
-  console.log(`Downloading godoc v${VERSION} for ${platform}-${mappedArch}...`);
+  console.log(`Downloading sourcepack v${VERSION} for ${platform}-${mappedArch}...`);
 
   const res = await download(downloadUrl);
   const chunks = [];
@@ -61,19 +61,19 @@ async function main() {
     fs.writeFileSync(tmpFile, buf);
     execSync(`powershell -Command "Expand-Archive -Path '${tmpFile}' -DestinationPath '${binDir}' -Force"`, { stdio: 'inherit' });
     // Move binary out of subdirectory if wrapped
-    const wrapped = path.join(binDir, `godoc_${VERSION}_${platform}_${mappedArch}`, 'godoc.exe');
+    const wrapped = path.join(binDir, `sourcepack_${VERSION}_${platform}_${mappedArch}`, 'sourcepack.exe');
     const target = path.join(binDir, binName);
     if (fs.existsSync(wrapped)) fs.renameSync(wrapped, target);
     fs.unlinkSync(tmpFile);
-    try { fs.rmdirSync(path.join(binDir, `godoc_${VERSION}_${platform}_${mappedArch}`)); } catch {}
+    try { fs.rmdirSync(path.join(binDir, `sourcepack_${VERSION}_${platform}_${mappedArch}`)); } catch {}
   } else {
     // tar.gz — use pipe
     const { execSync } = require('child_process');
     const tmpFile = path.join(binDir, archiveName);
     fs.writeFileSync(tmpFile, buf);
     execSync(`tar xzf "${tmpFile}" -C "${binDir}" --strip-components=1`, { stdio: 'inherit' });
-    // Rename godoc to godoc-{platform}-{arch}
-    const extracted = path.join(binDir, 'godoc');
+    // Rename sourcepack to sourcepack-{platform}-{arch}
+    const extracted = path.join(binDir, 'sourcepack');
     const target = path.join(binDir, binName);
     if (fs.existsSync(extracted)) fs.renameSync(extracted, target);
     fs.unlinkSync(tmpFile);
@@ -83,7 +83,7 @@ async function main() {
   const target = path.join(binDir, binName);
   if (fs.existsSync(target)) {
     fs.chmodSync(target, 0o755);
-    console.log(`✓ godoc v${VERSION} installed successfully.`);
+    console.log(`✓ sourcepack v${VERSION} installed successfully.`);
   } else {
     console.error(`Error: expected binary not found at ${target}`);
     process.exit(1);
@@ -91,7 +91,7 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error(`Failed to download godoc: ${err.message}`);
+  console.error(`Failed to download sourcepack: ${err.message}`);
   console.error(`You can manually download from: https://github.com/${REPO}/releases/tag/v${VERSION}`);
   process.exit(1);
 });
