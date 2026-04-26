@@ -623,7 +623,8 @@ func printConfigSummary(c Config) {
 // ============================================================
 
 type treeNode struct {
-	children map[string]*treeNode
+	children  map[string]*treeNode
+	lineCount int // only set for files
 }
 
 func buildTreeString(files []FileMetadata, rootName string) string {
@@ -637,6 +638,7 @@ func buildTreeString(files []FileMetadata, rootName string) string {
 			}
 			node = node.children[part]
 		}
+		node.lineCount = f.LineCount
 	}
 	var sb strings.Builder
 	sb.WriteString(rootName + "/\n")
@@ -659,6 +661,7 @@ func formatTree(sb *strings.Builder, node *treeNode, prefix string) {
 
 	for i, name := range names {
 		child := node.children[name]
+		isDir := len(child.children) > 0
 		isLast := i == len(names)-1
 		connector := "├── "
 		newPrefix := "│   "
@@ -667,8 +670,10 @@ func formatTree(sb *strings.Builder, node *treeNode, prefix string) {
 			newPrefix = "    "
 		}
 		sb.WriteString(prefix + connector + name)
-		if len(child.children) > 0 {
+		if isDir {
 			sb.WriteString("/")
+		} else {
+			sb.WriteString(fmt.Sprintf("  (%d lines)", child.lineCount))
 		}
 		sb.WriteString("\n")
 		formatTree(sb, child, prefix+newPrefix)

@@ -187,12 +187,12 @@ func TestBuildTreeString(t *testing.T) {
 	want := `myproject/
 ├── cmd/
 │   └── app/
-│       ├── main.go
-│       └── util.go
+│       ├── main.go  (0 lines)
+│       └── util.go  (0 lines)
 ├── internal/
-│   └── handler.go
-├── README.md
-└── go.mod
+│   └── handler.go  (0 lines)
+├── README.md  (0 lines)
+└── go.mod  (0 lines)
 `
 	if got != want {
 		t.Errorf("buildTreeString() =\n%s\nwant:\n%s", got, want)
