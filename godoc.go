@@ -137,6 +137,10 @@ func main() {
 		return
 	}
 
+	if config.Verbose {
+		printConfigSummary(config)
+	}
+
 	if !config.DryRun {
 		fmt.Println("▶ Sourcepack Started")
 	} else {
@@ -147,6 +151,13 @@ func main() {
 
 	// 1. Scan and filter
 	files, stats, skipped := scanDirectory(config)
+
+	if config.Verbose && len(skipped) > 0 {
+		fmt.Printf("\n⏭  Skipped %d files:\n", len(skipped))
+		for _, s := range skipped {
+			fmt.Printf("  - %-40s [%s]\n", s.RelPath, s.Reason)
+		}
+	}
 
 	// 2. Output to Terminal
 	if config.DryRun {
@@ -236,10 +247,20 @@ func scanDirectory(config Config) ([]FileMetadata, Stats, []SkippedFile) {
 	var skipped []SkippedFile
 
 	var ignorePatterns []string
+	var gitCount, gdCount int
 	if !config.NoGitignore {
-		ignorePatterns = loadGitignore(config.RootDir)
+		gitPatterns := loadGitignore(config.RootDir)
+		gitCount = len(gitPatterns)
+		ignorePatterns = append(ignorePatterns, gitPatterns...)
 	}
-	ignorePatterns = append(ignorePatterns, loadGdignore(config.RootDir)...)
+	gdPatterns := loadGdignore(config.RootDir)
+	gdCount = len(gdPatterns)
+	ignorePatterns = append(ignorePatterns, gdPatterns...)
+
+	if config.Verbose {
+		if gitCount > 0 { fmt.Printf("  Loaded .gitignore (%d patterns)\n", gitCount) }
+		if gdCount > 0 { fmt.Printf("  Loaded .gdignore (%d patterns)\n", gdCount) }
+	}
 
 	filepath.WalkDir(config.RootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil { return nil }
@@ -285,6 +306,10 @@ func scanDirectory(config Config) ([]FileMetadata, Stats, []SkippedFile) {
 		tokens := estimateTokens(path)
 		fMeta := FileMetadata{RelPath: relPath, FullPath: path, Size: info.Size(), LineCount: lineCount}
 		files = append(files, fMeta)
+
+		if config.Verbose {
+			fmt.Printf("  + %-40s %d lines\n", relPath, lineCount)
+		}
 
 		// Accumulate Stats
 		stats.FileCount++
@@ -550,4 +575,20 @@ func printDryRun(files []FileMetadata, stats Stats, skipped []SkippedFile) {
 		fmt.Printf("\n⏭  Skipped:\n")
 		for _, s := range skipped { fmt.Printf("  - %-40s [%s]\n", s.RelPath, s.Reason) }
 	}
+}
+
+func printConfigSummary(c Config) {
+	fmt.Println("⚙  Configuration:")
+	fmt.Printf("  %-20s %s\n", "Root:", c.RootDir)
+	fmt.Printf("  %-20s %s\n", "Output:", c.OutputFile)
+	fmt.Printf("  %-20s %d KB\n", "Max file size:", c.MaxFileSize/1024)
+	if len(c.IncludeExts) > 0 { fmt.Printf("  %-20s %v\n", "Include exts:", c.IncludeExts) }
+	if len(c.ExcludeExts) > 0 { fmt.Printf("  %-20s %v\n", "Exclude exts:", c.ExcludeExts) }
+	if len(c.IncludeMatches) > 0 { fmt.Printf("  %-20s %v\n", "Include matches:", c.IncludeMatches) }
+	if len(c.ExcludeMatches) > 0 { fmt.Printf("  %-20s %v\n", "Exclude matches:", c.ExcludeMatches) }
+	if len(c.AdditionalIgnores) > 0 { fmt.Printf("  %-20s %v\n", "Extra ignores:", c.AdditionalIgnores) }
+	fmt.Printf("  %-20s %v\n", "No subdirs:", c.NoSubdirs)
+	fmt.Printf("  %-20s %v\n", "No default ignore:", c.NoDefaultIgnore)
+	fmt.Printf("  %-20s %v\n", "No .gitignore:", c.NoGitignore)
+	fmt.Println()
 }

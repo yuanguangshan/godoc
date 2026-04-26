@@ -9,7 +9,7 @@ Sourcepack 是一个极简、高性能的工具，用于扫描项目目录并将
 ```bash
 npm install -g sourcepack
 # 或
-bash install-godoc.sh
+bash install.sh
 ```
 
 ## 使用
