@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,6 +42,8 @@ type Config struct {
 	NoGitignore       bool
 	AdditionalIgnores []string
 	Copy              bool
+	PushURL           string
+	AuthKey           string
 }
 
 type FileMetadata struct {
@@ -190,6 +194,12 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("\n✨ Done! Copied to clipboard (%d chars) in %v\n", len(content), duration)
+	} else if config.PushURL != "" {
+		if err := pushToRemote(content, config.PushURL, config.AuthKey); err != nil {
+			fmt.Printf("❌ Failed to push: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("\n✨ Done! Pushed to %s (%d chars) in %v\n", config.PushURL, len(content), duration)
 	} else {
 		if err := os.WriteFile(config.OutputFile, []byte(content), 0644); err != nil {
 			fmt.Printf("❌ Error writing file: %v\n", err)
@@ -220,8 +230,17 @@ func parseFlags() Config {
 	pflag.BoolVar(&c.NoDefaultIgnore, "no-default-ignore", false, "Disable default ignore rules")
 	pflag.BoolVar(&c.NoGitignore, "no-gitignore", false, "Do not load .gitignore")
 	pflag.BoolVarP(&c.Copy, "copy", "c", false, "Copy output to clipboard instead of file")
+	pflag.StringVarP(&c.PushURL, "push-url", "p", "", "Push content to remote URL (e.g. https://host/submit)")
+	pflag.StringVar(&c.AuthKey, "auth-key", "", "X-Auth-Key for push auth (or env SOURCEPACK_AUTH_KEY)")
 
 	pflag.Parse()
+
+	if c.AuthKey == "" {
+		c.AuthKey = os.Getenv("SOURCEPACK_AUTH_KEY")
+	}
+	if c.PushURL == "" {
+		c.PushURL = os.Getenv("SOURCEPACK_PUSH_URL")
+	}
 
 	if incExts != "" { c.IncludeExts = cleanList(incExts) }
 	if incMatches != "" { c.IncludeMatches = cleanList(incMatches) }
@@ -615,6 +634,9 @@ func printConfigSummary(c Config) {
 	fmt.Printf("  %-20s %v\n", "No default ignore:", c.NoDefaultIgnore)
 	fmt.Printf("  %-20s %v\n", "No .gitignore:", c.NoGitignore)
 	fmt.Printf("  %-20s %v\n", "Copy to clipboard:", c.Copy)
+	if c.PushURL != "" {
+		fmt.Printf("  %-20s %s\n", "Push to remote:", c.PushURL)
+	}
 	fmt.Println()
 }
 
@@ -704,4 +726,29 @@ func copyToClipboard(content string) error {
 	}
 	cmd.Stdin = strings.NewReader(content)
 	return cmd.Run()
+}
+
+// ============================================================
+//  Remote Push Support
+// ============================================================
+
+func pushToRemote(content, url, authKey string) error {
+	body, _ := json.Marshal(map[string]string{"content": content})
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if authKey != "" {
+		req.Header.Set("X-Auth-Key", authKey)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("server returned %d", resp.StatusCode)
+	}
+	return nil
 }
