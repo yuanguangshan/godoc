@@ -231,6 +231,18 @@ func main() {
 
 func parseFlags() Config {
 	var c Config
+
+	pflag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		pflag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "\nCombinations:")
+		fmt.Fprintln(os.Stderr, "  -s -p     Show stats and push stats-only markdown to remote")
+		fmt.Fprintln(os.Stderr, "  -c -p     Not supported (-c takes priority)")
+		fmt.Fprintf(os.Stderr, "\nEnvironment variables:\n")
+		fmt.Fprintf(os.Stderr, "  SOURCEPACK_PUSH_URL    Remote URL for push (e.g. https://host/submit)\n")
+		fmt.Fprintf(os.Stderr, "  SOURCEPACK_AUTH_KEY    X-Auth-Key for push authentication\n")
+	}
+
 	pflag.StringVarP(&c.RootDir, "dir", "d", ".", "Root directory to scan")
 	pflag.StringVarP(&c.OutputFile, "out", "o", "project_snapshot.md", "Output markdown file")
 	
